@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+import os
 import db
 import matrix
 import quotes
@@ -14,9 +15,11 @@ scheduler = AsyncIOScheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler = AsyncIOScheduler()
-    repo = db.Repo("test.DB")
-    mat = matrix.Matrix(repo, "http://192.168.1.117:7000/api/v3/customapp")
-    poller = quotes.Poller("api_key", repo)
+    repo = db.Repo(os.getenv("DB_PATH", "test.db"))
+    mat = matrix.Matrix(
+        repo, os.getenv("MATRIX_ENDPOINT", "http://192.168.1.117:7000/api/v3/customapp")
+    )
+    poller = quotes.Poller(os.getenv("FINNHUB_API_KEY", ""), repo)
     scheduler.add_job(poller.run, IntervalTrigger(minutes=10))
     scheduler.add_job(mat.run, IntervalTrigger(minutes=10))
     app.state.repo = repo
@@ -24,12 +27,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-
-
-class Item(BaseModel):
-    name: str
-    price: float
-    is_offer: Union[bool, None] = None
 
 
 @app.get("/")
@@ -42,16 +39,30 @@ def read_ticks():
     return app.state.repo.get_ticks()
 
 
+@app.put("/ticks/{tick}/{ath}")
+def update_ticks(tick: str, ath: float):
+    app.state.repo.upsert_tick(tick, ath)
+    return {"ok": True}
+
+
+@app.delete("/ticks/{tick}")
+def delete_ticks(tick: str):
+    app.state.repo.delete_tick(tick)
+    return {"ok": True}
+
+
 @app.get("/matrix")
 def read_matrix():
     return app.state.repo.get_matrix()
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.put("/matrix/{matrix_id}")
+def add_matrix(matrix_id: int):
+    app.state.repo.insert_matrix(str(matrix_id))
+    return {"ok": True}
 
 
-@app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    return {"item_name": item.name, "item_id": item_id}
+@app.delete("/matrixmatrix/{matrix_id}")
+def delete_matrix(matrix_id: int):
+    app.state.repo.delete_matrix(str(matrix_id))
+    return {"ok": True}
