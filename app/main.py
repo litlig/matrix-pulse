@@ -15,7 +15,7 @@ scheduler = AsyncIOScheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler = AsyncIOScheduler()
-    repo = db.Repo(os.getenv("DB_PATH", "test.db"))
+    repo = db.Repo(os.getenv("DB_PATH", "/data/test.db"))
     mat = matrix.Matrix(
         repo, os.getenv("MATRIX_ENDPOINT", "http://192.168.1.117:7000/api/v3/customapp")
     )

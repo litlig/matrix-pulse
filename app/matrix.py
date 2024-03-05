@@ -26,4 +26,4 @@ class Matrix:
         if response.status_code != 200:
             logger.error("post to matrix failed")
         else:
-            logger.info("posted to matrix: " + str(data))
+            logger.warning("posted to matrix: " + str(data))
