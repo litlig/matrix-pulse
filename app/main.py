@@ -19,9 +19,10 @@ async def lifespan(app: FastAPI):
     mat = matrix.Matrix(
         repo, os.getenv("MATRIX_ENDPOINT", "http://192.168.1.117:7000/api/v3/customapp")
     )
-    poller = quotes.Poller(os.getenv("FINNHUB_API_KEY", ""), repo)
-    scheduler.add_job(poller.run, IntervalTrigger(minutes=10))
-    scheduler.add_job(mat.run, IntervalTrigger(minutes=10))
+    poller = quotes.Poller(os.getenv("FINNHUB_API_KEY", ""), repo, mat)
+    scheduler.add_job(poller.run, IntervalTrigger(minutes=1))
+    scheduler.add_job(mat.run, IntervalTrigger(minutes=1))
+    scheduler.start()
     app.state.repo = repo
     yield
 

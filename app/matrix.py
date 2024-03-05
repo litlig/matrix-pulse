@@ -1,15 +1,12 @@
 from db import Repo
 import requests
+import logging
 
-"""
-curl --header "Content-Type: application/json" \
- -d '{"ID":4, "text": "Google dropped"}' http://192.168.1.117:7000/api/v3/customapp
-"""
-
+logger = logging.getLogger(__name__)
 
 class Matrix:
     def __init__(self, repo: Repo, url: str):
-        self.Repo = repo
+        self.repo = repo
         self.buffer = set()
         self.url = url
         self.boards = repo.get_matrix()
@@ -23,8 +20,10 @@ class Matrix:
 
         t = self.buffer.pop()
         data = dict()
-        data["ID"] = int(4)
+        data["ID"] = self.repo.get_matrix()[1]
         data["text"] = t + " dipped!"
         response = requests.post(self.url, json=data)
         if response.status_code != 200:
-            print("post to matrix failed")
+            logger.error("post to matrix failed")
+        else:
+            logger.info("posted to matrix: " + str(data))
