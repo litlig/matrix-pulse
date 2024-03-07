@@ -4,6 +4,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+DEFAULT_MESSAGE = {
+    "force": False,
+    "icon": 2173,
+    "moveIcon": True,
+    "repeat": 2,
+    "color": [0, 255, 0],
+    "data": "Gooood Day"
+}
+
 class Matrix:
     def __init__(self, repo: Repo, url: str):
         self.repo = repo
@@ -16,14 +26,21 @@ class Matrix:
 
     def run(self) -> None:
         if not self.buffer:
+            response = requests.post(self.url, json=DEFAULT_MESSAGE)
             return
-
+        
         t = self.buffer.pop()
-        data = dict()
-        data["ID"] = self.repo.get_matrix()[1]
-        data["text"] = t + " dipped!"
-        response = requests.post(self.url, json=data)
+        text = t + " dipped!"
+        alert = {
+            "force": True,
+            "icon": 2193,
+            "moveIcon": False,
+            "repeat": 3,
+            "color": [255, 0, 0],
+            "data": text
+        }
+        response = requests.post(self.url, json=alert)
         if response.status_code != 200:
             logger.error("post to matrix failed")
         else:
-            logger.warning("posted to matrix: " + str(data))
+            logger.info("posted to matrix: " + str(alert))

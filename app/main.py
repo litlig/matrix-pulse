@@ -15,9 +15,9 @@ scheduler = AsyncIOScheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler = AsyncIOScheduler()
-    repo = db.Repo(os.getenv("DB_PATH", "/data/test.db"))
+    repo = db.Repo(os.getenv("DB_PATH", "test.db"))
     mat = matrix.Matrix(
-        repo, os.getenv("MATRIX_ENDPOINT", "http://192.168.1.117:7000/api/v3/customapp")
+        repo, os.getenv("MATRIX_ENDPOINT", "http://192.168.1.117:7000/api/v3/notify")
     )
     poller = quotes.Poller(os.getenv("FINNHUB_API_KEY", ""), repo, mat)
     scheduler.add_job(poller.run, IntervalTrigger(minutes=1))
